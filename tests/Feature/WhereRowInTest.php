@@ -17,6 +17,27 @@ class WhereRowInTest extends TestCase
         );
     }
 
+    public function test_where_not_row_in_macro_is_registered(): void
+    {
+        $this->assertTrue(
+            Builder::hasMacro('whereNotRowIn'),
+        );
+    }
+
+    public function test_or_where_row_in_macro_is_registered(): void
+    {
+        $this->assertTrue(
+            Builder::hasMacro('orWhereRowIn'),
+        );
+    }
+
+    public function test_or_where_not_row_in_macro_is_registered(): void
+    {
+        $this->assertTrue(
+            Builder::hasMacro('orWhereNotRowIn'),
+        );
+    }
+
     public function test_where_row_in_macro_adds_bindings(): void
     {
         $builder = $this->app['db']
@@ -63,6 +84,52 @@ class WhereRowInTest extends TestCase
         );
     }
 
+    public function test_where_not_row_in_preserves_binding_order(): void
+    {
+        $builder = $this->app['db']
+            ->connection()
+            ->query()
+            ->from('users');
+
+        $builder
+            ->where('status', 'active')
+            ->whereNotRowIn(
+                ['id', 'name'],
+                [
+                    [1, 'Alice'],
+                    [2, 'Bob'],
+                ],
+            );
+
+        $this->assertSame(
+            ['active', 1, 'Alice', 2, 'Bob'],
+            $builder->getBindings(),
+        );
+    }
+
+    public function test_or_where_not_row_in_preserves_binding_order(): void
+    {
+        $builder = $this->app['db']
+            ->connection()
+            ->query()
+            ->from('users');
+
+        $builder
+            ->where('status', 'active')
+            ->orWhereNotRowIn(
+                ['id', 'name'],
+                [
+                    [1, 'Alice'],
+                    [2, 'Bob'],
+                ],
+            );
+
+        $this->assertSame(
+            ['active', 1, 'Alice', 2, 'Bob'],
+            $builder->getBindings(),
+        );
+    }
+
     public function test_where_row_in_stores_row_in_where_clause(): void
     {
         $builder = $this->app['db']
@@ -94,6 +161,69 @@ class WhereRowInTest extends TestCase
                 'boolean' => 'and',
             ],
             $wheres[0],
+        );
+    }
+
+    public function test_where_not_row_in_stores_not_row_in_where_clause(): void
+    {
+        $builder = $this->app['db']
+            ->connection()
+            ->query()
+            ->from('users');
+
+        $builder->whereNotRowIn(
+            ['id', 'name'],
+            [
+                [1, 'Alice'],
+                [2, 'Bob'],
+            ],
+        );
+
+        $reflection = new ReflectionClass($builder);
+
+        $property = $reflection->getProperty('wheres');
+        $wheres = $property->getValue($builder);
+
+        $this->assertSame(
+            [
+                'type' => 'NotRowIn',
+                'columns' => ['id', 'name'],
+                'values' => [
+                    [1, 'Alice'],
+                    [2, 'Bob'],
+                ],
+                'boolean' => 'and',
+            ],
+            $wheres[0],
+        );
+    }
+
+    public function test_or_where_not_row_in_uses_or_boolean(): void
+    {
+        $builder = $this->app['db']
+            ->connection()
+            ->query()
+            ->from('users');
+
+        $builder->orWhereNotRowIn(
+            ['id', 'name'],
+            [
+                [1, 'Alice'],
+                [2, 'Bob'],
+            ],
+        );
+
+        $reflection = new \ReflectionClass($builder);
+
+        $property = $reflection->getProperty('wheres');
+        $wheres = $property->getValue($builder);
+
+        $this->assertSame('NotRowIn', $wheres[0]['type']);
+        $this->assertSame('or', $wheres[0]['boolean']);
+
+        $this->assertSame(
+            [1, 'Alice', 2, 'Bob'],
+            $builder->getBindings(),
         );
     }
 }

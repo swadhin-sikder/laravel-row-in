@@ -38,5 +38,27 @@ class RowInServiceProvider extends ServiceProvider
 
             return $this;
         });
+
+        Builder::macro('orWhereRowIn', function (
+            array $columns,
+            array $values,
+        ) {
+            return $this->whereRowIn($columns, $values, 'or');
+        });
+
+        Builder::macro('whereNotRowIn', function (
+            array $columns,
+            array $values,
+            string $boolean = 'and',
+        ) {
+            return $this->whereRowIn($columns, $values, $boolean, true);
+        });
+
+        Builder::macro('orWhereNotRowIn', function (
+            array $columns,
+            array $values,
+        ) {
+            return $this->whereNotRowIn($columns, $values, 'or');
+        });
     }
 }
