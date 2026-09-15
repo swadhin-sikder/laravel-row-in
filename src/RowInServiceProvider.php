@@ -12,53 +12,59 @@ class RowInServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
-        if (Builder::hasMacro('whereRowIn')) {
-            return;
+        if (! Builder::hasMacro('whereNotRowIn')) {
+            Builder::macro('whereRowIn', function (
+                array $columns,
+                array $values,
+                string $boolean = 'and',
+                bool $not = false,
+            ) {
+                $type = $not ? 'NotRowIn' : 'RowIn';
+
+                $this->wheres[] = compact(
+                    'type',
+                    'columns',
+                    'values',
+                    'boolean',
+                );
+
+                $this->addBinding(
+                    Arr::flatten($values, 1),
+                    'where',
+                );
+
+                return $this;
+            });
         }
 
-        Builder::macro('whereRowIn', function (
-            array $columns,
-            array $values,
-            string $boolean = 'and',
-            bool $not = false,
-        ) {
-            $type = $not ? 'NotRowIn' : 'RowIn';
+        if (! Builder::hasMacro('orWhereRowIn')) {
+            Builder::macro('orWhereRowIn', function (
+                array $columns,
+                array $values,
+            ) {
+                return $this->whereRowIn($columns, $values, 'or');
+            });
+        }
 
-            $this->wheres[] = compact(
-                'type',
-                'columns',
-                'values',
-                'boolean',
-            );
+        if (! Builder::hasMacro('whereNotRowIn')) {
+            Builder::macro('whereNotRowIn', function (
+                array $columns,
+                array $values,
+                string $boolean = 'and',
+            ) {
+                return $this->whereRowIn($columns, $values, $boolean, true);
+            });
+        }
 
-            $this->addBinding(
-                Arr::flatten($values, 1),
-                'where',
-            );
+        if (! Builder::hasMacro('orWhereNotRowIn')) {
+            Builder::macro('orWhereNotRowIn', function (
+                array $columns,
+                array $values,
+            ) {
+                return $this->whereNotRowIn($columns, $values, 'or');
+            });
+        }
 
-            return $this;
-        });
-
-        Builder::macro('orWhereRowIn', function (
-            array $columns,
-            array $values,
-        ) {
-            return $this->whereRowIn($columns, $values, 'or');
-        });
-
-        Builder::macro('whereNotRowIn', function (
-            array $columns,
-            array $values,
-            string $boolean = 'and',
-        ) {
-            return $this->whereRowIn($columns, $values, $boolean, true);
-        });
-
-        Builder::macro('orWhereNotRowIn', function (
-            array $columns,
-            array $values,
-        ) {
-            return $this->whereNotRowIn($columns, $values, 'or');
-        });
+        RowInGrammar::register();
     }
 }

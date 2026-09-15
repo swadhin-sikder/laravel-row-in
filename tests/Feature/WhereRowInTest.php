@@ -226,4 +226,63 @@ class WhereRowInTest extends TestCase
             $builder->getBindings(),
         );
     }
+
+    public function test_compiles_where_row_in_to_sql(): void
+    {
+        $query = $this->app['db']
+            ->connection()
+            ->table('users')
+            ->whereRowIn(
+                ['user_id', 'role_id'],
+                [
+                    [1, 2],
+                    [3, 4],
+                ],
+            );
+
+        expect($query->toSql())
+            ->toBe('select * from "users" where ("user_id", "role_id") in ((?, ?), (?, ?))')
+            ->and($query->getBindings())
+            ->toBe([1, 2, 3, 4]);
+
+    }
+
+    public function test_compiles_where_not_row_in_to_sql(): void
+    {
+        $query = $this->app['db']
+            ->connection()
+            ->table('users')
+            ->whereNotRowIn(
+                ['user_id', 'role_id'],
+                [
+                    [1, 2],
+                    [3, 4],
+                ],
+            );
+
+        expect($query->toSql())
+            ->toBe('select * from "users" where ("user_id", "role_id") not in ((?, ?), (?, ?))')
+            ->and($query->getBindings())
+            ->toBe([1, 2, 3, 4]);
+    }
+
+    public function test_where_row_in_compiles_alongside_normal_where_clauses(): void
+    {
+        $query = $this->app['db']
+            ->connection()
+            ->table('users')
+            ->where('active', true)
+            ->whereRowIn(
+                ['user_id', 'role_id'],
+                [
+                    [1, 2],
+                    [3, 4],
+                ],
+            );
+
+        expect($query->toSql())
+            ->toBe('select * from "users" where "active" = ? and ("user_id", "role_id") in ((?, ?), (?, ?))')
+            ->and($query->getBindings())
+            ->toBe([true, 1, 2, 3, 4]);
+    }
 }
