@@ -5,11 +5,24 @@ declare(strict_types=1);
 namespace SwadhinSikder\LaravelRowIn\Tests\Feature;
 
 use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Query\Grammars\MySqlGrammar;
+use Illuminate\Database\Query\Grammars\PostgresGrammar;
+use Illuminate\Database\Query\Grammars\SQLiteGrammar;
 use ReflectionClass;
 use SwadhinSikder\LaravelRowIn\Tests\TestCase;
 
 class WhereRowInTest extends TestCase
 {
+    private function queryWithGrammar(string $grammarClass): Builder
+    {
+        $connection = $this->app['db']->connection();
+
+        return new Builder(
+            $connection,
+            new $grammarClass($connection),
+        );
+    }
+
     public function test_where_row_in_macro_is_registered(): void
     {
         $this->assertTrue(
@@ -370,5 +383,59 @@ class WhereRowInTest extends TestCase
 
         expect($query->getBindings())
             ->toBe(['active', true]);
+    }
+
+    public function test_compiles_where_row_in_with_mysql_grammar(): void
+    {
+        $query = $this->queryWithGrammar(MySqlGrammar::class)
+            ->from('users')
+            ->whereRowIn(
+                ['user_id', 'role_id'],
+                [
+                    [1, 2],
+                    [3, 4],
+                ],
+            );
+
+        expect($query->toSql())
+            ->toBe('select * from `users` where (`user_id`, `role_id`) in ((?, ?), (?, ?))')
+            ->and($query->getBindings())
+            ->toBe([1, 2, 3, 4]);
+    }
+
+    public function test_compiles_where_row_in_with_postgres_grammar(): void
+    {
+        $query = $this->queryWithGrammar(PostgresGrammar::class)
+            ->from('users')
+            ->whereRowIn(
+                ['user_id', 'role_id'],
+                [
+                    [1, 2],
+                    [3, 4],
+                ],
+            );
+
+        expect($query->toSql())
+            ->toBe('select * from "users" where ("user_id", "role_id") in ((?, ?), (?, ?))')
+            ->and($query->getBindings())
+            ->toBe([1, 2, 3, 4]);
+    }
+
+    public function test_compiles_where_row_in_with_sqlite_grammar(): void
+    {
+        $query = $this->queryWithGrammar(SQLiteGrammar::class)
+            ->from('users')
+            ->whereRowIn(
+                ['user_id', 'role_id'],
+                [
+                    [1, 2],
+                    [3, 4],
+                ],
+            );
+
+        expect($query->toSql())
+            ->toBe('select * from "users" where ("user_id", "role_id") in ((?, ?), (?, ?))')
+            ->and($query->getBindings())
+            ->toBe([1, 2, 3, 4]);
     }
 }
