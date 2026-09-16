@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace SwadhinSikder\LaravelRowIn;
 
 use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Arr;
 use Illuminate\Support\ServiceProvider;
 
@@ -15,22 +16,30 @@ class RowInServiceProvider extends ServiceProvider
         if (! Builder::hasMacro('whereNotRowIn')) {
             Builder::macro('whereRowIn', function (
                 array $columns,
-                array $values,
+                mixed $values,
                 string $boolean = 'and',
                 bool $not = false,
             ) {
                 $type = $not ? 'NotRowIn' : 'RowIn';
+
+                if ($this->isQueryable($values)) {
+                    [$query, $bindings] = $this->createSub($values);
+
+                    $values = [new Expression($query)];
+
+                    $this->addBinding($bindings, 'where');
+                } else {
+                    $this->addBinding(
+                        Arr::flatten($values, 1),
+                        'where',
+                    );
+                }
 
                 $this->wheres[] = compact(
                     'type',
                     'columns',
                     'values',
                     'boolean',
-                );
-
-                $this->addBinding(
-                    Arr::flatten($values, 1),
-                    'where',
                 );
 
                 return $this;
@@ -40,7 +49,7 @@ class RowInServiceProvider extends ServiceProvider
         if (! Builder::hasMacro('orWhereRowIn')) {
             Builder::macro('orWhereRowIn', function (
                 array $columns,
-                array $values,
+                mixed $values,
             ) {
                 return $this->whereRowIn($columns, $values, 'or');
             });
@@ -49,7 +58,7 @@ class RowInServiceProvider extends ServiceProvider
         if (! Builder::hasMacro('whereNotRowIn')) {
             Builder::macro('whereNotRowIn', function (
                 array $columns,
-                array $values,
+                mixed $values,
                 string $boolean = 'and',
             ) {
                 return $this->whereRowIn($columns, $values, $boolean, true);
@@ -59,7 +68,7 @@ class RowInServiceProvider extends ServiceProvider
         if (! Builder::hasMacro('orWhereNotRowIn')) {
             Builder::macro('orWhereNotRowIn', function (
                 array $columns,
-                array $values,
+                mixed $values,
             ) {
                 return $this->whereNotRowIn($columns, $values, 'or');
             });

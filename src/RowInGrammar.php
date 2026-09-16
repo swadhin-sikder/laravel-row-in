@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace SwadhinSikder\LaravelRowIn;
 
 use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Database\Query\Grammars\Grammar;
 
 final class RowInGrammar
@@ -43,11 +44,24 @@ final class RowInGrammar
 
         $operator = $not ? 'not in' : 'in';
 
+        $values = $where['values'];
+
+        if (
+            count($values) === 1
+            && $values[0] instanceof Expression
+        ) {
+            return '('.$columns.') '.$operator.' ('
+                .$values[0]->getValue($grammar)
+                .')';
+        }
+
         $rows = array_map(
             fn (array $row): string => '('.$grammar->parameterize($row).')',
-            $where['values'],
+            $values,
         );
 
-        return '('.$columns.') '.$operator.' ('.implode(', ', $rows).')';
+        return '('.$columns.') '.$operator.' ('
+            .implode(', ', $rows)
+            .')';
     }
 }

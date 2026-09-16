@@ -213,7 +213,7 @@ class WhereRowInTest extends TestCase
             ],
         );
 
-        $reflection = new \ReflectionClass($builder);
+        $reflection = new ReflectionClass($builder);
 
         $property = $reflection->getProperty('wheres');
         $wheres = $property->getValue($builder);
@@ -244,7 +244,6 @@ class WhereRowInTest extends TestCase
             ->toBe('select * from "users" where ("user_id", "role_id") in ((?, ?), (?, ?))')
             ->and($query->getBindings())
             ->toBe([1, 2, 3, 4]);
-
     }
 
     public function test_compiles_where_not_row_in_to_sql(): void
@@ -284,5 +283,92 @@ class WhereRowInTest extends TestCase
             ->toBe('select * from "users" where "active" = ? and ("user_id", "role_id") in ((?, ?), (?, ?))')
             ->and($query->getBindings())
             ->toBe([true, 1, 2, 3, 4]);
+    }
+
+    public function test_compiles_where_row_in_with_subquery(): void
+    {
+        $subquery = $this->app['db']
+            ->connection()
+            ->table('user_roles')
+            ->select(['user_id', 'role_id']);
+
+        $query = $this->app['db']
+            ->connection()
+            ->table('users')
+            ->whereRowIn(
+                ['user_id', 'role_id'],
+                $subquery,
+            );
+
+        expect($query->toSql())
+            ->toBe(
+                'select * from "users" where ("user_id", "role_id") in (select "user_id", "role_id" from "user_roles")',
+            )
+            ->and($query->getBindings())
+            ->toBe([]);
+    }
+
+    public function test_compiles_where_not_row_in_with_subquery(): void
+    {
+        $subquery = $this->app['db']
+            ->connection()
+            ->table('user_roles')
+            ->select(['user_id', 'role_id']);
+
+        $query = $this->app['db']
+            ->connection()
+            ->table('users')
+            ->whereNotRowIn(
+                ['user_id', 'role_id'],
+                $subquery,
+            );
+
+        expect($query->toSql())
+            ->toBe(
+                'select * from "users" where ("user_id", "role_id") not in (select "user_id", "role_id" from "user_roles")'
+            )
+            ->and($query->getBindings())
+            ->toBe([]);
+    }
+
+    public function test_where_row_in_subquery_preserves_bindings(): void
+    {
+        $subquery = $this->app['db']
+            ->connection()
+            ->table('user_roles')
+            ->select(['user_id', 'role_id'])
+            ->where('active', true);
+
+        $query = $this->app['db']
+            ->connection()
+            ->table('users')
+            ->whereRowIn(
+                ['user_id', 'role_id'],
+                $subquery,
+            );
+
+        expect($query->getBindings())
+            ->toBe([true]);
+    }
+
+    public function test_where_row_in_subquery_preserves_binding_order(): void
+    {
+        $subquery = $this->app['db']
+            ->connection()
+            ->table('user_roles')
+            ->select(['user_id', 'role_id'])
+            ->where('active', true);
+
+        $query = $this->app['db']
+            ->connection()
+            ->table('users')
+            ->where('status', 'active')
+            ->whereRowIn(
+                ['user_id', 'role_id'],
+                $subquery,
+            );
+
+        expect($query->getBindings())
+            ->toBe(['active', true]);
     }
 }
