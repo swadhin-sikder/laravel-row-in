@@ -14,8 +14,15 @@ final class SqlServerRowInGrammar
         array $where,
         bool $not,
     ): string {
-        $columns = $where['columns'];
         $values = $where['values'];
+
+        // Same convention as the base grammar: an empty set can never
+        // match, and NOT of an empty set always matches.
+        if (empty($values)) {
+            return $not ? '1 = 1' : '0 = 1';
+        }
+
+        $columns = $where['columns'];
 
         if (
             count($values) === 1
@@ -40,9 +47,9 @@ final class SqlServerRowInGrammar
                 $rowConditions[] = $grammar->wrap($column)
                     .' = '
                     .(
-                        $value instanceof Expression
-                            ? $value->getValue($grammar)
-                            : $grammar->parameter($value)
+                    $value instanceof Expression
+                        ? $value->getValue($grammar)
+                        : $grammar->parameter($value)
                     );
             }
 

@@ -19,7 +19,6 @@ final class RowInGrammar
                 array $where,
             ): string {
                 /** @var Grammar $this */
-
                 if ($this instanceof SqlServerGrammar) {
                     return SqlServerRowInGrammar::compile(
                         $this,
@@ -38,7 +37,6 @@ final class RowInGrammar
                 array $where,
             ): string {
                 /** @var Grammar $this */
-
                 if ($this instanceof SqlServerGrammar) {
                     return SqlServerRowInGrammar::compile(
                         $this,
@@ -57,11 +55,19 @@ final class RowInGrammar
         array $where,
         bool $not,
     ): string {
+        $values = $where['values'];
+
+        // Mirrors Laravel's own Grammar::whereIn()/whereNotIn() behaviour:
+        // an empty set is always false (never matches), and its negation
+        // is always true (matches everything), rather than emitting
+        // invalid SQL like `(...) in ()`.
+        if (empty($values)) {
+            return $not ? '1 = 1' : '0 = 1';
+        }
+
         $columns = $grammar->columnize($where['columns']);
 
         $operator = $not ? 'not in' : 'in';
-
-        $values = $where['values'];
 
         if (
             count($values) === 1

@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace SwadhinSikder\LaravelRowIn;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Arr;
 use Illuminate\Support\ServiceProvider;
+use InvalidArgumentException;
 
 class RowInServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
-        if (! Builder::hasMacro('whereNotRowIn')) {
+        if (! Builder::hasMacro('whereRowIn')) {
             Builder::macro('whereRowIn', function (
                 array $columns,
                 mixed $values,
@@ -29,6 +31,40 @@ class RowInServiceProvider extends ServiceProvider
 
                     $this->addBinding($bindings, 'where');
                 } else {
+                    if ($values instanceof Arrayable) {
+                        $values = $values->toArray();
+                    }
+
+                    $columnCount = count($columns);
+
+                    foreach ($values as $index => $row) {
+                        if ($row instanceof Arrayable) {
+                            $row = $row->toArray();
+                        }
+
+                        if (! is_array($row)) {
+                            throw new InvalidArgumentException(sprintf(
+                                'Row at index %d must be an array of values, %s given.',
+                                $index,
+                                get_debug_type($row),
+                            ));
+                        }
+
+                        if (count($row) !== $columnCount) {
+                            throw new InvalidArgumentException(sprintf(
+                                'Row at index %d must have exactly %d value(s) to match the given columns, %d given.',
+                                $index,
+                                $columnCount,
+                                count($row),
+                            ));
+                        }
+
+                        // Re-key sequentially so grammars can safely rely on
+                        // positional access (e.g. $row[0], $row[1], ...),
+                        // even if the caller passed an associative array.
+                        $values[$index] = array_values($row);
+                    }
+
                     $this->addBinding(
                         $this->cleanBindings(Arr::flatten($values, 1)),
                     );
