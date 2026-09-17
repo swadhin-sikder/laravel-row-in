@@ -7,6 +7,7 @@ namespace SwadhinSikder\LaravelRowIn;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Database\Query\Grammars\Grammar;
+use Illuminate\Database\Query\Grammars\SqlServerGrammar;
 
 final class RowInGrammar
 {
@@ -19,6 +20,14 @@ final class RowInGrammar
             ): string {
                 /** @var Grammar $this */
 
+                if ($this instanceof SqlServerGrammar) {
+                    return SqlServerRowInGrammar::compile(
+                        $this,
+                        $where,
+                        false,
+                    );
+                }
+
                 return RowInGrammar::compile($this, $where, false);
             });
         }
@@ -29,6 +38,14 @@ final class RowInGrammar
                 array $where,
             ): string {
                 /** @var Grammar $this */
+
+                if ($this instanceof SqlServerGrammar) {
+                    return SqlServerRowInGrammar::compile(
+                        $this,
+                        $where,
+                        true,
+                    );
+                }
 
                 return RowInGrammar::compile($this, $where, true);
             });
