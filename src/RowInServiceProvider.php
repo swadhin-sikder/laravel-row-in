@@ -30,8 +30,7 @@ class RowInServiceProvider extends ServiceProvider
                     $this->addBinding($bindings, 'where');
                 } else {
                     $this->addBinding(
-                        Arr::flatten($values, 1),
-                        'where',
+                        $this->cleanBindings(Arr::flatten($values, 1)),
                     );
                 }
 
