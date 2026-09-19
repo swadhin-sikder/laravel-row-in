@@ -6,7 +6,7 @@
     <a href="https://packagist.org/packages/swadhin-sikder/laravel-row-in"><img src="https://img.shields.io/packagist/v/swadhin-sikder/laravel-row-in.svg?style=flat-square" alt="Packagist"></a>
     <a href="https://packagist.org/packages/swadhin-sikder/laravel-row-in"><img src="https://img.shields.io/packagist/php-v/swadhin-sikder/laravel-row-in.svg?style=flat-square" alt="PHP from Packagist"></a>
     <a href="https://packagist.org/packages/swadhin-sikder/laravel-row-in"><img src="https://badge.laravel.cloud/badge/swadhin-sikder/laravel-row-in?style=flat" alt="Laravel versions"></a>
-    <a href="https://github.com/swadhin-sikder/laravel-row-in/actions"><img alt="GitHub Workflow Status (main)" src="https://img.shields.io/github/actions/workflow/status/swadhin-sikder/laravel-row-in/tests.yml?branch=main&label=Tests&style=flat-square"></a>
+    <a href="https://github.com/swadhin-sikder/laravel-row-in/actions"><img alt="GitHub Workflow Status (master)" src="https://img.shields.io/github/actions/workflow/status/swadhin-sikder/laravel-row-in/tests.yml?branch=master&label=Tests&style=flat-square"></a>
     <a href="https://packagist.org/packages/swadhin-sikder/laravel-row-in"><img src="https://img.shields.io/packagist/dt/swadhin-sikder/laravel-row-in.svg?style=flat-square" alt="Total Downloads"></a>
 </p>
 

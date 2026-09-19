@@ -65,10 +65,25 @@ class RowInServiceProvider extends ServiceProvider
                             ));
                         }
 
-                        // Re-key sequentially so grammars can safely rely on
-                        // positional access (e.g. $row[0], $row[1], ...),
-                        // even if the caller passed an associative array.
-                        $values[$index] = array_values($row);
+                        if (array_keys($row) !== range(0, count($row) - 1)) {
+                            $normalizedRow = [];
+
+                            foreach ($columns as $column) {
+                                if (! array_key_exists($column, $row)) {
+                                    throw new InvalidArgumentException(sprintf(
+                                        'Row at index %d must contain a value for column %s.',
+                                        $index,
+                                        $column,
+                                    ));
+                                }
+
+                                $normalizedRow[] = $row[$column];
+                            }
+
+                            $values[$index] = $normalizedRow;
+                        } else {
+                            $values[$index] = array_values($row);
+                        }
                     }
 
                     $this->addBinding(

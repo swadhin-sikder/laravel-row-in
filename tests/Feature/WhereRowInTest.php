@@ -479,4 +479,24 @@ class WhereRowInTest extends TestCase
             ->and($query->getBindings())
             ->toBe([2, 3]);
     }
+
+    public function test_associative_rows_are_matched_in_column_order(): void
+    {
+        $query = $this->queryWithGrammar(SQLiteGrammar::class)
+            ->from('users')
+            ->whereRowIn(
+                ['id', 'email'],
+                [[
+                    'email' => 'test@example.com',
+                    'id' => 1,
+                ]],
+            );
+
+        expect($query->toSql())
+            ->toBe(
+                'select * from "users" where ("id", "email") in ((?, ?))',
+            )
+            ->and($query->getBindings())
+            ->toBe([1, 'test@example.com']);
+    }
 }
