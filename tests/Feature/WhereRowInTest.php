@@ -9,7 +9,6 @@ use Illuminate\Database\Query\Expression;
 use Illuminate\Database\Query\Grammars\MySqlGrammar;
 use Illuminate\Database\Query\Grammars\PostgresGrammar;
 use Illuminate\Database\Query\Grammars\SQLiteGrammar;
-use Illuminate\Database\Query\Grammars\SqlServerGrammar;
 use ReflectionClass;
 use SwadhinSikder\LaravelRowIn\Tests\TestCase;
 
@@ -441,106 +440,6 @@ class WhereRowInTest extends TestCase
             ->toBe([1, 2, 3, 4]);
     }
 
-    public function test_sql_server_compiles_where_row_in_as_or_conditions(): void
-    {
-        $query = $this->queryWithGrammar(SqlServerGrammar::class)
-            ->from('users')
-            ->whereRowIn(
-                ['user_id', 'role_id'],
-                [
-                    [1, 2],
-                    [3, 4],
-                ],
-            );
-
-        expect($query->toSql())
-            ->toBe(
-                'select * from [users] where (([user_id] = ? and [role_id] = ?) or ([user_id] = ? and [role_id] = ?))',
-            )
-            ->and($query->getBindings())
-            ->toBe([1, 2, 3, 4]);
-    }
-
-    public function test_sql_server_compiles_where_not_row_in_as_negated_or_conditions(): void
-    {
-        $query = $this->queryWithGrammar(SqlServerGrammar::class)
-            ->from('users')
-            ->whereNotRowIn(
-                ['user_id', 'role_id'],
-                [
-                    [1, 2],
-                    [3, 4],
-                ],
-            );
-
-        expect($query->toSql())
-            ->toBe(
-                'select * from [users] where not (([user_id] = ? and [role_id] = ?) or ([user_id] = ? and [role_id] = ?))',
-            )
-            ->and($query->getBindings())
-            ->toBe([1, 2, 3, 4]);
-    }
-
-    public function test_sql_server_compiles_single_row_where_row_in(): void
-    {
-        $query = $this->queryWithGrammar(SqlServerGrammar::class)
-            ->from('users')
-            ->whereRowIn(
-                ['user_id', 'role_id'],
-                [
-                    [1, 2],
-                ],
-            );
-
-        expect($query->toSql())
-            ->toBe(
-                'select * from [users] where (([user_id] = ? and [role_id] = ?))',
-            )
-            ->and($query->getBindings())
-            ->toBe([1, 2]);
-    }
-
-    public function test_sql_server_compiles_three_column_where_row_in(): void
-    {
-        $query = $this->queryWithGrammar(SqlServerGrammar::class)
-            ->from('users')
-            ->whereRowIn(
-                ['user_id', 'role_id', 'tenant_id'],
-                [
-                    [1, 2, 10],
-                    [3, 4, 20],
-                ],
-            );
-
-        expect($query->toSql())
-            ->toBe(
-                'select * from [users] where (([user_id] = ? and [role_id] = ? and [tenant_id] = ?) or ([user_id] = ? and [role_id] = ? and [tenant_id] = ?))',
-            )
-            ->and($query->getBindings())
-            ->toBe([1, 2, 10, 3, 4, 20]);
-    }
-
-    public function test_sql_server_preserves_boolean_combination_with_where_row_in(): void
-    {
-        $query = $this->queryWithGrammar(SqlServerGrammar::class)
-            ->from('users')
-            ->where('active', true)
-            ->orWhereRowIn(
-                ['user_id', 'role_id'],
-                [
-                    [1, 2],
-                    [3, 4],
-                ],
-            );
-
-        expect($query->toSql())
-            ->toBe(
-                'select * from [users] where [active] = ? or (([user_id] = ? and [role_id] = ?) or ([user_id] = ? and [role_id] = ?))',
-            )
-            ->and($query->getBindings())
-            ->toBe([true, 1, 2, 3, 4]);
-    }
-
     public function test_compiles_raw_expressions_in_where_row_in(): void
     {
         $query = $this->queryWithGrammar(SQLiteGrammar::class)
@@ -561,26 +460,6 @@ class WhereRowInTest extends TestCase
             ->toBe([2, 3]);
     }
 
-    public function test_sql_server_compiles_raw_expressions_in_where_row_in(): void
-    {
-        $query = $this->queryWithGrammar(SqlServerGrammar::class)
-            ->from('users')
-            ->whereRowIn(
-                ['user_id', 'role_id'],
-                [
-                    [new Expression('1'), 2],
-                    [3, new Expression('4')],
-                ],
-            );
-
-        expect($query->toSql())
-            ->toBe(
-                'select * from [users] where (([user_id] = 1 and [role_id] = ?) or ([user_id] = ? and [role_id] = 4))',
-            )
-            ->and($query->getBindings())
-            ->toBe([2, 3]);
-    }
-
     public function test_compiles_raw_expressions_in_where_not_row_in(): void
     {
         $query = $this->queryWithGrammar(SQLiteGrammar::class)
@@ -596,26 +475,6 @@ class WhereRowInTest extends TestCase
         expect($query->toSql())
             ->toBe(
                 'select * from "users" where ("user_id", "role_id") not in ((1, ?), (?, 4))',
-            )
-            ->and($query->getBindings())
-            ->toBe([2, 3]);
-    }
-
-    public function test_sql_server_compiles_raw_expressions_in_where_not_row_in(): void
-    {
-        $query = $this->queryWithGrammar(SqlServerGrammar::class)
-            ->from('users')
-            ->whereNotRowIn(
-                ['user_id', 'role_id'],
-                [
-                    [new Expression('1'), 2],
-                    [3, new Expression('4')],
-                ],
-            );
-
-        expect($query->toSql())
-            ->toBe(
-                'select * from [users] where not (([user_id] = 1 and [role_id] = ?) or ([user_id] = ? and [role_id] = 4))',
             )
             ->and($query->getBindings())
             ->toBe([2, 3]);

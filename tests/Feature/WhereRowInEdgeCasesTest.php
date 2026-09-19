@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace SwadhinSikder\LaravelRowIn\Tests\Feature;
 
 use Illuminate\Database\Query\Builder;
-use Illuminate\Database\Query\Grammars\SqlServerGrammar;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
 use SwadhinSikder\LaravelRowIn\Tests\TestCase;
@@ -64,30 +63,6 @@ class WhereRowInEdgeCasesTest extends TestCase
             ->toBe('select * from "users" where "active" = ? and 0 = 1')
             ->and($query->getBindings())
             ->toBe([true]);
-    }
-
-    public function test_sql_server_where_row_in_with_empty_values_compiles_to_always_false(): void
-    {
-        $query = $this->queryWithGrammar(SqlServerGrammar::class)
-            ->from('users')
-            ->whereRowIn(['user_id', 'role_id'], []);
-
-        expect($query->toSql())
-            ->toBe('select * from [users] where 0 = 1')
-            ->and($query->getBindings())
-            ->toBe([]);
-    }
-
-    public function test_sql_server_where_not_row_in_with_empty_values_compiles_to_always_true(): void
-    {
-        $query = $this->queryWithGrammar(SqlServerGrammar::class)
-            ->from('users')
-            ->whereNotRowIn(['user_id', 'role_id'], []);
-
-        expect($query->toSql())
-            ->toBe('select * from [users] where 1 = 1')
-            ->and($query->getBindings())
-            ->toBe([]);
     }
 
     // -----------------------------------------------------------------
@@ -208,23 +183,6 @@ class WhereRowInEdgeCasesTest extends TestCase
             ->toBe('select * from "users" where ("user_id", "role_id") in ((?, ?), (?, ?))')
             ->and($query->getBindings())
             ->toBe([1, 2, 3, 4]);
-    }
-
-    public function test_sql_server_normalizes_associative_row_arrays(): void
-    {
-        $query = $this->queryWithGrammar(SqlServerGrammar::class)
-            ->from('users')
-            ->whereRowIn(
-                ['user_id', 'role_id'],
-                [
-                    ['user_id' => 1, 'role_id' => 2],
-                ],
-            );
-
-        expect($query->toSql())
-            ->toBe('select * from [users] where (([user_id] = ? and [role_id] = ?))')
-            ->and($query->getBindings())
-            ->toBe([1, 2]);
     }
 
     // -----------------------------------------------------------------

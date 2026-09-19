@@ -6,9 +6,13 @@ namespace SwadhinSikder\LaravelRowIn;
 
 use Illuminate\Database\Query\Expression;
 use Illuminate\Database\Query\Grammars\SqlServerGrammar;
+use InvalidArgumentException;
 
 final class SqlServerRowInGrammar
 {
+    /**
+     * @param  array<string, mixed>  $where
+     */
     public static function compile(
         SqlServerGrammar $grammar,
         array $where,
@@ -28,17 +32,20 @@ final class SqlServerRowInGrammar
             count($values) === 1
             && $values[0] instanceof Expression
         ) {
-            $columnList = $grammar->columnize($columns);
-            $operator = $not ? 'not in' : 'in';
-
-            return '('.$columnList.') '.$operator.' ('
-                .$values[0]->getValue($grammar)
-                .')';
+            throw new InvalidArgumentException(
+                'SQL Server does not support subqueries in row-in clauses.',
+            );
         }
 
         $conditions = [];
 
         foreach ($values as $row) {
+            if (! is_array($row)) {
+                throw new InvalidArgumentException(
+                    'Row values must be arrays when compiling a SQL Server row-in clause.',
+                );
+            }
+
             $rowConditions = [];
 
             foreach ($columns as $index => $column) {
@@ -47,9 +54,9 @@ final class SqlServerRowInGrammar
                 $rowConditions[] = $grammar->wrap($column)
                     .' = '
                     .(
-                    $value instanceof Expression
-                        ? $value->getValue($grammar)
-                        : $grammar->parameter($value)
+                        $value instanceof Expression
+                            ? $value->getValue($grammar)
+                            : $grammar->parameter($value)
                     );
             }
 

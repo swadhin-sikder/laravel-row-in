@@ -11,17 +11,23 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\ServiceProvider;
 use InvalidArgumentException;
 
+/**
+ * @phpstan-type Row array<int, mixed>|Arrayable<array-key, mixed>
+ * @phpstan-type Values list<Row>|Arrayable<array-key, mixed>|Builder|\Illuminate\Database\Eloquent\Builder<*>|\Illuminate\Database\Eloquent\Relations\Relation<*, *, * >|\Closure|string
+ */
 class RowInServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
         if (! Builder::hasMacro('whereRowIn')) {
-            Builder::macro('whereRowIn', function (
+            Builder::macro('whereRowIn', /** @param list<string> $columns
+             * @param  Values  $values
+             */ function (
                 array $columns,
                 mixed $values,
                 string $boolean = 'and',
                 bool $not = false,
-            ) {
+            ): Builder {
                 $type = $not ? 'NotRowIn' : 'RowIn';
 
                 if ($this->isQueryable($values)) {
@@ -82,30 +88,36 @@ class RowInServiceProvider extends ServiceProvider
         }
 
         if (! Builder::hasMacro('orWhereRowIn')) {
-            Builder::macro('orWhereRowIn', function (
+            Builder::macro('orWhereRowIn', /** @param list<string> $columns
+             * @param  Values  $values
+             */ function (
                 array $columns,
                 mixed $values,
-            ) {
-                return $this->whereRowIn($columns, $values, 'or');
+            ): Builder {
+                return $this->__call('whereRowIn', [$columns, $values, 'or']);
             });
         }
 
         if (! Builder::hasMacro('whereNotRowIn')) {
-            Builder::macro('whereNotRowIn', function (
+            Builder::macro('whereNotRowIn', /** @param list<string> $columns
+             * @param  Values  $values
+             */ function (
                 array $columns,
                 mixed $values,
                 string $boolean = 'and',
-            ) {
-                return $this->whereRowIn($columns, $values, $boolean, true);
+            ): Builder {
+                return $this->__call('whereRowIn', [$columns, $values, $boolean, true]);
             });
         }
 
         if (! Builder::hasMacro('orWhereNotRowIn')) {
-            Builder::macro('orWhereNotRowIn', function (
+            Builder::macro('orWhereNotRowIn', /** @param list<string> $columns
+             * @param  Values  $values
+             */ function (
                 array $columns,
                 mixed $values,
-            ) {
-                return $this->whereNotRowIn($columns, $values, 'or');
+            ): Builder {
+                return $this->__call('whereNotRowIn', [$columns, $values, 'or']);
             });
         }
 

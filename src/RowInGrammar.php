@@ -14,7 +14,8 @@ final class RowInGrammar
     public static function register(): void
     {
         if (! Grammar::hasMacro('whereRowIn')) {
-            Grammar::macro('whereRowIn', function (
+            Grammar::macro('whereRowIn', /** @param array{columns: list<string>, values: list<mixed>} $where
+             */ function (
                 Builder $query,
                 array $where,
             ): string {
@@ -32,7 +33,8 @@ final class RowInGrammar
         }
 
         if (! Grammar::hasMacro('whereNotRowIn')) {
-            Grammar::macro('whereNotRowIn', function (
+            Grammar::macro('whereNotRowIn', /** @param array{columns: list<string>, values: list<mixed>} $where
+             */ function (
                 Builder $query,
                 array $where,
             ): string {
@@ -50,6 +52,9 @@ final class RowInGrammar
         }
     }
 
+    /**
+     * @param  array<string, mixed>  $where
+     */
     public static function compile(
         Grammar $grammar,
         array $where,
@@ -79,7 +84,7 @@ final class RowInGrammar
         }
 
         $rows = array_map(
-            fn (array $row): string => '('.$grammar->parameterize($row).')',
+            fn (mixed $row): string => '('.$grammar->parameterize($row).')',
             $values,
         );
 
