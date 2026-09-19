@@ -28,7 +28,7 @@
     "larastan/larastan": "^3.12.2",
     "laravel/agent-detector": "^2.0",
     "laravel/chisel": "^0.1",
-    "laravel/framework": "12.*",
+    "laravel/framework": "13.*",
     "laravel/pao": "^1.0",
     "laravel/pint": "^1.29",
     "laravel/prompts": "^0.3",
