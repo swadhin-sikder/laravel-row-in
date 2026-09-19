@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Associative rows are now reordered according to the supplied column list before bindings are added, ensuring binding order matches the generated row-value SQL.
+
+### Fixed
+
 - SQL Server row-in subqueries are now rejected with an `InvalidArgumentException` instead of compiling to unsupported row-value `IN` syntax.
 
 ## [v1.0.0](https://github.com/swadhin-sikder/laravel-row-in/releases/tag/v1.0.0) - 2026-09-18
